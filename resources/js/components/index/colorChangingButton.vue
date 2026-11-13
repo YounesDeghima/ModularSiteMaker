@@ -25,9 +25,11 @@ function changeColor(){
 </script>
 
 <template>
-    <button :style="{backgroundColor:btnColor ,color:btnTxtColor}" @click="changeColor">
-        change my color
-    </button>
+    <div>
+        <button :style="{backgroundColor:btnColor ,color:btnTxtColor}" @click="changeColor">
+            change my color
+        </button>
+    </div>
 </template>
 
 <style scoped>

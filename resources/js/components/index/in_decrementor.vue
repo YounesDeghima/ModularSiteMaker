@@ -1,8 +1,10 @@
 <template>
-    <button v-on:click="increment_counter">increment</button>
-    <button v-on:click="decrement_counter">decrement</button>
-    <h2>value : {{counter}}</h2>
-    <h2>parity : {{parity}}</h2>
+    <div>
+        <button v-on:click="increment_counter">increment</button>
+        <button v-on:click="decrement_counter">decrement</button>
+        <h2>value : {{counter}}</h2>
+        <h2>parity : {{parity}}</h2>
+    </div>
 </template>
 
 <script setup>

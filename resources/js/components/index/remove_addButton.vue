@@ -12,15 +12,17 @@ function switchMode(){
 </script>
 
 <template>
-    <button @click="switchMode">
-        switch between on and off
-    </button>
-    <button v-if="btnStatus">
+    <div>
+        <button @click="switchMode">
+            switch between on and off
+        </button>
+        <button v-if="btnStatus">
             i am on
-    </button>
-    <button v-else :disabled="!btnStatus">
-        i am off
-    </button>
+        </button>
+        <button v-else :disabled="!btnStatus">
+            i am off
+        </button>
+    </div>
 </template>
 
 <style scoped>
