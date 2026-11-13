@@ -11,6 +11,9 @@
 <body>
     <div id="app">
         <in_decrementor> </in_decrementor>
+        <color-changing-button></color-changing-button>
+        <remove_add-button></remove_add-button>
     </div>
+
 </body>
 </html>
