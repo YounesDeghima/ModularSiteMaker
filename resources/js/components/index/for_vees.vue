@@ -1,8 +1,15 @@
 <script setup lang="ts">
-import {ref, computed} from 'vue'
+import {ref, computed, useTemplateRef, onMounted, watch, watchEffect} from 'vue'
 let table = ['nigga1','nigga2','nigga3','nigga4']
 const names = ref(table)
 const listtype = ref('ol')
+const itemrefs = useTemplateRef('items')
+watchEffect(()=>{
+    console.log(`the list type is ${listtype.value} and the list is ${names.value.join('->')}`)
+})
+
+onMounted(()=>console.log(itemrefs.value))
+
 function niggaFunc(niggaName){
     return "this niggas number is : "+ niggaName.split('').pop()
 }
@@ -32,7 +39,7 @@ function changeTableType(){
         <button @click="changeTableType">change list type</button>
         <button @click="randomise">shuffle</button>
         <component :is="listtype">
-            <li v-for="nigga in names">
+            <li v-for="nigga in names" ref="items">
                 {{niggaFunc(nigga)}}
             </li>
         </component>
