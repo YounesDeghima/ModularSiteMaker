@@ -10,6 +10,7 @@ interface tableData{
     isBorder : boolean,
     color : string,
     isHead : boolean
+    clicked : boolean
 
 }
 const SIZE = 21
@@ -28,8 +29,13 @@ const table = ref<tableData[][]>(
     )
 )
 function initialiseTable(){
-    table.value.forEach((row)=>row.forEach((d)=>{d.isBorder = false;d.snakeTime = 0;d.hasApple = false}))
+    table.value.forEach((row)=>row.forEach((d)=>{d.isBorder ? console.log("i did nothing") :d.isBorder = false;d.snakeTime = 0;d.hasApple = false}))
 }
+
+let normalMode = "normalMode"
+let twinMode = "twinMode"
+
+const gameMode = ref<"normalMode"|"twinMode">("normalMode")
 
 const latestApplePos = ref({i:0,j:0})
 
@@ -156,6 +162,37 @@ function borderMaker() {
     return null
 }
 
+function findCell(time: number) {
+    for (let i = 0; i < table.value.length; i++) {
+        for (let j = 0; j < table.value[i].length; j++) {
+            if (table.value[i][j].snakeTime === time) return { i, j }
+        }
+    }
+    return null
+}
+function reverseSnake(){
+    let t = []
+    let ph = null //placeholder
+    table.value.forEach((c)=>c.forEach((x)=>x.snakeTime > 0 ? t.push(x) : console.log('niggers')))
+    t.sort((a,b)=>a.snakeTime - b.snakeTime)
+
+    let tail = findCell(1)
+    let beforeTail = findCell(2)
+    let di = tail.i - beforeTail.i
+    let dj = tail.j - beforeTail.j
+
+
+
+
+    for(let i=0;i<t.length/2;i++){
+        ph = t[i].snakeTime
+        t[i].snakeTime = t[t.length - i - 1].snakeTime
+        t[t.length - i - 1].snakeTime = ph
+    }
+    direction.value = di == 1 ? "down" : di == -1 ? "up" : dj == 1 ? "right" : "left"
+    lastMoved = direction.value
+
+}
 function moveSnake(){
     let head = findHead()
     let ni = head.i + moves[direction.value].i
@@ -166,10 +203,11 @@ function moveSnake(){
         stopGame()
         return;
     }
-
+    let ateAnApple = false
     if(next.hasApple){
         next.hasApple = false
         length.value ++
+        ateAnApple = true
         randomAppleGenerator()
     }
     else{
@@ -177,8 +215,12 @@ function moveSnake(){
             if (c.snakeTime > 0) c.snakeTime--
         })
     }
-    next.snakeTime = length.value   // new head, after the countdown
+    next.snakeTime = length.value
+    if(gameMode.value == "twinMode" && ateAnApple == true){
+        reverseSnake()
+    }
     lastMoved = direction.value
+
 
 
 
@@ -221,12 +263,13 @@ function eyePosition(){
 const gameStarted = ref <boolean>(false)
 
 function startGame(){
+    lvlBuilderStarted.value = false
     gameStarted.value = true
     length.value =3
     direction.value = "left"
     lastMoved = "left"
     initialiseTable()
-    borderMaker()
+
     initialiseSnake()
     randomAppleGenerator()
     initialiseGameTick()
@@ -236,6 +279,8 @@ function startGame(){
 
 
 function stopGame(){
+    gameStarted.value = false
+    initialiseTable()
     stopKeyWatcher?.()
 
 
@@ -255,8 +300,21 @@ function initialiseGameTick(){
 }
 
 
+const lvlBuilderStarted = ref<boolean>(false)
+function lvlBuilder(){
+
+    lvlBuilderStarted.value = true
+
+}
+function gotClicked(cell: tableData){
+    deleteStarted.value && lvlBuilderStarted.value ? cell.isBorder = false : !deleteStarted.value ? cell.isBorder = true : console.log("you are a nigger")
+}
+
+const deleteStarted = ref<boolean>(false)
+
 
 onMounted(()=>{
+    initialiseTable()
     borderMaker();
     }
 )
@@ -265,27 +323,40 @@ onMounted(()=>{
 </script>
 
 <template>
-    <button @click="startGame" :disabled="gameStarted">start game</button>
-    <button @click="resetGame">new game</button>
-    <div class="board">
-        <div class="row" v-for="(row,r) in table" :key="r">
-            <div  v-for="(cell,c) in row" :key="c"
-                  class="cell"
-                  :class="{
+    <div class="board" :class="{ building: lvlBuilderStarted, deleting: deleteStarted }">
+        <button @click="lvlBuilder" :disabled="gameStarted"  class="tool"
+                :class="{ on: lvlBuilderStarted }">lvl builder: {{ lvlBuilderStarted ? 'ON' : 'OFF' }}</button>
+        <button  :class="{ on: deleteStarted }" @click="deleteStarted ? deleteStarted=false : deleteStarted=true" :style="{visibility:lvlBuilderStarted ?'visible' : 'hidden'}" >delete blocks: {{ deleteStarted ? 'ON' : 'OFF' }}</button>
+
+        <button @click="startGame" :disabled="gameStarted">start game</button>
+        <button @click="resetGame">new game</button>
+        <select v-model="gameMode" :disabled="gameStarted">
+
+            <option :value="normalMode">normal mode</option>
+            <option :value="twinMode">twin mode</option>
+        </select>
+        <div class="board">
+            <div class="row" v-for="(row,r) in table" :key="r">
+                <div  v-for="(cell,c) in row" :key="c"
+                      class="cell"
+                      :class="{
                 snake : cell.snakeTime>0,
                 apple : cell.hasApple,
                 border : cell.isBorder,
                 head:cell.snakeTime == length
             }"
+                      @click="lvlBuilderStarted ? gotClicked(cell) : console.log('nothing will happen')"
 
-                  :style="{
+                      :style="{
     borderRadius: cell.snakeTime === length ? directionHeadStyle : '0px',
     '--eye-bg': eyePosStyle,
 }">
 
+                </div>
             </div>
         </div>
     </div>
+
 </template>
 
 <style scoped>
@@ -316,4 +387,34 @@ onMounted(()=>{
 .head::before { left: 1px; }
 .head::after  { right: 1px; }
 
+
+.tool {
+    padding: 6px 12px;
+    border: 2px solid #888;
+    border-radius: 6px;
+    background: #f3f3f3;
+    color: #333;
+    cursor: pointer;
+    transition: background-color 120ms, border-color 120ms, color 120ms;
+}
+.tool:hover:not(:disabled) { border-color: #444; }
+.tool:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ON state: builder is green, delete is red */
+.tool.on {
+    background: #2e9e4f;
+    border-color: #1b6b34;
+    color: white;
+    box-shadow: 0 0 6px rgba(46, 158, 79, 0.6);
+}
+.tool.delete.on {
+    background: #d33;
+    border-color: #911;
+    box-shadow: 0 0 6px rgba(211, 51, 51, 0.6);
+}
+
+/* board feedback while building */
+.board.building .cell { cursor: pointer; }
+.board.building .cell:hover { outline: 2px solid #2e9e4f; outline-offset: -2px; }
+.board.deleting .cell:hover { outline-color: #d33; }
 </style>
