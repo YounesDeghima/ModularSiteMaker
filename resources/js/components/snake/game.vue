@@ -9,10 +9,14 @@ interface tableData{
     hasApple : boolean,
     isBorder : boolean,
     color : string,
-    isHead : boolean
-    clicked : boolean
+    isHead : boolean,
+    clicked : boolean,
+    isPortal : boolean,
+    portalOrientation :string
 
 }
+
+const clockSpeed = ref<number>(5)
 const SIZE = 21
 
 const createCell = (row: number, col: number): tableData => ({
@@ -21,6 +25,9 @@ const createCell = (row: number, col: number): tableData => ({
     isBorder: row === 0 || col === 0 || row === SIZE - 1 || col === SIZE - 1,
     isHead:false,
     color: 'red',
+    clicked : false,
+    isPortal : false,
+    portalOrientation : "none"
 })
 
 const table = ref<tableData[][]>(
@@ -248,6 +255,79 @@ function randomAppleGenerator(){
     latestApplePos.value.j = bruh.j
 
 }
+
+function hasPortal(rc){
+    let si = rc.i-1 > 0 ? rc.i-1 : si
+    let ei = rc.i+1
+    let
+}
+function randomPortalSliceGenerator(rc){
+    let rp = []
+    if(rc.i<19 && rc.i>2){
+        rp.push("down"); rc.push("up")
+    }
+    else{
+        if(rc.i<2){
+            rp.push("down")
+        }
+        else{
+            rp.push("up")
+        }
+
+    }
+    if(rc.j<19 && rc.j>2){
+        rp.push("left"); rc.push("right")
+    }
+    else{
+        if(rc.j<2){
+            rp.push("right")
+        }
+        else{
+            rp.push("left")
+        }
+
+    }
+    return rp
+
+}
+
+let rpDirections = {
+
+}
+
+
+function randomPortalSliceGenerator2(rc,rp){
+    let i = Math.floor(Math.random()*rp.length())
+    let directionRp = rp[i]
+    let rpf = []
+    for(let k=0;k<2;k++){
+        if(directionRp == 'up'){
+            table.value[rc.i-k][rc.j].isPortal = true
+        }
+        if(directionRp == 'down'){
+            table.value[rc.i+k][rc.j].isPortal = true
+        }
+        if(directionRp == 'right'){
+            table.value[rc.i][rc.j+k].isPortal = true
+        }
+        if(directionRp == 'left'){
+            table.value[rc.i][rc.j-k].isPortal = true
+        }
+    }
+
+}
+
+
+function randomPortalGenerator(){
+    let rc = randomCell(20,20)
+    let rpA = randomPortalSliceGenerator(rc)
+
+
+
+
+}
+
+
 function initialiseSnake(){
     table.value[15][15].snakeTime = 3
     table.value[15][16].snakeTime = 2
@@ -296,7 +376,7 @@ function resetGame(){
 function initialiseGameTick(){
     gameTick = setInterval(()=>{
         moveSnake();
-    },100)
+    },1000-clockSpeed.value*90)
 }
 
 
@@ -307,17 +387,21 @@ function lvlBuilder(){
 
 }
 function gotClicked(cell: tableData){
-    deleteStarted.value && lvlBuilderStarted.value ? cell.isBorder = false : !deleteStarted.value ? cell.isBorder = true : console.log("you are a nigger")
+
+    lvlBuilderStarted.value ? cell.isBorder== false ? cell.isBorder = true :cell.isBorder = false : console.log("niggers")
 }
 
 const deleteStarted = ref<boolean>(false)
-
+const drawingStarted = ref<boolean>(false)
 
 onMounted(()=>{
     initialiseTable()
     borderMaker();
     }
 )
+watch(drawingStarted,(val)=>{
+    console.log("drawingStarted value changed ")
+})
 
 
 </script>
@@ -326,8 +410,12 @@ onMounted(()=>{
     <div class="board" :class="{ building: lvlBuilderStarted, deleting: deleteStarted }">
         <button @click="lvlBuilder" :disabled="gameStarted"  class="tool"
                 :class="{ on: lvlBuilderStarted }">lvl builder: {{ lvlBuilderStarted ? 'ON' : 'OFF' }}</button>
-        <button  :class="{ on: deleteStarted }" @click="deleteStarted ? deleteStarted=false : deleteStarted=true" :style="{visibility:lvlBuilderStarted ?'visible' : 'hidden'}" >delete blocks: {{ deleteStarted ? 'ON' : 'OFF' }}</button>
 
+        <select  v-model="clockSpeed" :disabled="gameStarted">
+            <option v-for="i in 10">
+                {{i}}
+            </option>
+        </select>
         <button @click="startGame" :disabled="gameStarted">start game</button>
         <button @click="resetGame">new game</button>
         <select v-model="gameMode" :disabled="gameStarted">
@@ -346,6 +434,9 @@ onMounted(()=>{
                 head:cell.snakeTime == length
             }"
                       @click="lvlBuilderStarted ? gotClicked(cell) : console.log('nothing will happen')"
+                      @mousedown.prevent="drawingStarted = true"
+                      @mouseenter="drawingStarted?gotClicked(cell):console.log(`btuh`)"
+                      @mouseup="drawingStarted = false"
 
                       :style="{
     borderRadius: cell.snakeTime === length ? directionHeadStyle : '0px',
