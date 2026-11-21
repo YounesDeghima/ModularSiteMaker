@@ -61,7 +61,7 @@ const portal1 = ref<Portal>({cells:[],direction:'up'})
 const portal2 = ref<Portal>({cells:[],direction:'up'})
 
 function initialiseTable(){
-    table.value.forEach((row)=>row.forEach((d)=>{d.isBorder ==true? console.log(".") :d.isBorder = false;d.isPortal=false;d.snakeTime = 0;d.hasApple = false}))
+    table.value.forEach((row)=>row.forEach((d)=>{d.isBorder ==true? console.log(".") :d.isBorder = false;d.isPortal=false;d.portalNumber=0;d.snakeTime = 0;d.hasApple = false}))
 }
 
 let normalMode = "normalMode"
@@ -299,7 +299,7 @@ function randomAppleGenerator(){
     do{
         bruh = randomCell(19,19)
 
-    }while(table.value[bruh.i][bruh.j].snakeTime>1||table.value[bruh.i][bruh.j].isBorder ==true)
+    }while(table.value[bruh.i][bruh.j].snakeTime>1||table.value[bruh.i][bruh.j].isBorder ==true||table.value[bruh.i][bruh.j].isPortal)
     table.value[bruh.i][bruh.j].hasApple = true
     latestApplePos.value.i = bruh.i
     latestApplePos.value.j = bruh.j
@@ -644,7 +644,7 @@ function startGame(){
     direction.value = "left"
     lastMoved = "left"
     initialiseTable()
-
+    borderMaker()
     initialiseSnake()
     randomAppleGenerator()
     initialiseGameTick()
